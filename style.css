@@ -1,0 +1,36 @@
+#searchZone {
+    position: sticky;
+    z-index: 2;
+}
+
+#searchResults {
+    padding-left: 0px;
+}
+#searchResults div {
+    width:200px;
+    height: 43.5px;
+    display: flex;
+    align-items: center;
+}
+#searchResults div span {
+    overflow:hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+#tabledata tr td, #tabledata tr th {
+    width:200px;
+    height: 43.5px;
+    align-items: center;
+    justify-items: center;
+}
+#searchResults div, #searchbar, #searchButton, #searchZone, td, th {
+    width: max-content;
+    border: solid lightgray 1px;
+    margin: 1px;
+    border-radius: 5px;
+    padding: 3px;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+#searchResults div img, #tabledata tr td img, #tabledata tr td img {
+    border-radius: 5px;
+}
