@@ -17,6 +17,9 @@
     white-space: nowrap;
     text-overflow: ellipsis;
 }
+#tableMain {
+    position: static;
+}
 #tabledata tr td, #tabledata tr th {
     width:200px;
     height: 43.5px;
