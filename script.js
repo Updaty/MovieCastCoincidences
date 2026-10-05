@@ -37,11 +37,17 @@ async function getCast(movie_id){
     searchResults.innerHTML = "";
     tableData.innerHTML = "";
     for (const actor of curr_cast){
-      let str = `<tr><td><img src="${getImagePath(profile_cache[actor])}" width=25><span> &nbsp;${textToHtml(actor)}</span></td>`;
+      let str = `<td><img src="${getImagePath(profile_cache[actor])}" width=25><span> &nbsp;${textToHtml(actor)}</span></td>`;
+      let count = 0;
       for (const movie of curr_movies) {
-        str += `<td><span> &nbsp;${textToHtml(movie_cache[movie].cast_dict[actor] ?? "-")}</span></td>`;
+        const character_name = movie_cache[movie].cast_dict[actor];
+        count += Boolean(character_name);
+        str += `<td><span> &nbsp;${textToHtml(character_name ?? "-")}</span></td>`;
       }
-      tableData.innerHTML += str + "</tr>";
+      if(count>1)
+        tableData.innerHTML += "<tr>" + str + "</tr>";
+      else
+        tableData.innerHTML += "<tr class=cool>" + str + "</tr>";
     }
   }
 };

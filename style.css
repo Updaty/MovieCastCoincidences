@@ -2,7 +2,10 @@
     position: sticky;
     z-index: 2;
 }
-
+tr.cool{
+    font-size: small;
+    color: grey;
+}
 #searchResults {
     padding-left: 0px;
 }
