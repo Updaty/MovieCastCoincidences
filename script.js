@@ -36,6 +36,7 @@ async function getCast(movie_id){
     }
     searchResults.innerHTML = "";
     tableData.innerHTML = "";
+    const actor_occur_map = {};
     for (const actor of curr_cast){
       let str = `<td><img src="${getImagePath(profile_cache[actor])}" width=25><span> &nbsp;${textToHtml(actor)}</span></td>`;
       let count = 0;
@@ -44,10 +45,21 @@ async function getCast(movie_id){
         count += Boolean(character_name);
         str += `<td><span> &nbsp;${textToHtml(character_name ?? "-")}</span></td>`;
       }
-      if(count>1)
-        tableData.innerHTML += "<tr>" + str + "</tr>";
+      if(Boolean(actor_occur_map[count]))
+        actor_occur_map[count].push(str);
       else
-        tableData.innerHTML += "<tr class=cool>" + str + "</tr>";
+        actor_occur_map[count] = [str];
+        
+    }
+    const counts = Object.keys(actor_occur_map);
+    
+    for (let i = counts.length - 1; i >= 0; i--) {
+      if (!Object.hasOwn(actor_occur_map, counts[i])) continue;
+      
+      const start_tr = (counts[i] === 1) ? "<tr class=cool>" : "<tr>";
+  
+      for (const str of actor_occur_map[counts[i]])
+        tableData.innerHTML += start_tr + str + "</tr>";
     }
   }
 };
