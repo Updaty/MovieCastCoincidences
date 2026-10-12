@@ -6,6 +6,14 @@ tr.cool{
     font-size: small;
     color: grey;
 }
+button.remove{
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 900;
+    padding: 0;
+}
 #searchResults {
     padding-left: 0px;
 }
