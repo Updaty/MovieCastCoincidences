@@ -8,6 +8,8 @@ const profile_cache = {};
 const curr_movies = [];
 let curr_cast = new Set();
 const movie_cache = {};
+let curr_page = 0;
+let curr_query = '';
 
 const textToHtml = str => Array.from(str).map(c => c==="&"?"&amp":(c==="<"?"&lt;":(c===">"?"&gt;":c))).join("");
 
@@ -25,13 +27,19 @@ function addRemoveButtonsEvent(){
         e.removeChild(e.children[i+1]);
       });
       tr_to_remove.forEach(e => tableData.removeChild(e));
-      addRemoveButtonsEvent();
+      if(remove_buttons.length === 0) {
+        tableMain.style.display = "none";
+        return;
+      }
+      if(i !== remove_buttons.length)
+        addRemoveButtonsEvent();
     }; 
   }
 }
 
 function fillInTableData(){
   searchResults.innerHTML = "";
+  searchPages.style.display = "none";
     tableData.innerHTML = "";
     const actor_occur_map = Object.create(null);
 
@@ -61,7 +69,7 @@ function fillInTableData(){
     }
 }
 
-async function getCast(movie_id){
+function getCast(movie_id){
   return async() => {
     let cast;
     if(movie_cache[movie_id].cast){
@@ -95,35 +103,63 @@ function getImagePath(path){
     else path = "https://image.tmdb.org/t/p/w92"+path;
     return path;
 }
+
+function attachListenersToSearchResults(){
+  const list_items = document.querySelectorAll("#searchResults div");
+
+  for (let i = 0; i < list_items.length; i++)
+    list_items[i].onclick = getCast(search_cache[curr_query].results[i + curr_page*3].id);
+}
+
+function showCurrSearchPage(){
+  searchResults.innerHTML = search_cache[curr_query].html[curr_page];
+
+  attachListenersToSearchResults();
+}
+
 async function searchMovies(){
-  const query = searchbar.value;
-  if(search_cache[query]){
-    searchResults.innerHTML = search_cache[query].html;
+  if(!(searchbar.value)) return;
+  curr_query = searchbar.value;
+  curr_page = 0;
+  searchPages.style.display = "flex";
+  if(search_cache[curr_query]){
+    showCurrSearchPage();
 
-    const list_items = document.querySelectorAll("#searchResults div");
-
-    for (let i = 0; i < list_items.length; i++)
-      list_items[i].onclick = await getCast(search_cache[query].results[i].id);
+    attachListenersToSearchResults();
     return;
   }
   searchResults.innerHTML = "";
-  const response = await fetch(`https://api.themoviedb.org/3/search/movie?query=${query}`, options);
+  const response = await fetch(`https://api.themoviedb.org/3/search/movie?query=${curr_query}`, options);
   const results = (await response.json()).results.map(e => {
     return {id: e.id, poster_path: e.poster_path, title: e.title}
   });
   
-  for (let i = 0; i < 5 && i < results.length; i++){
-    searchResults.innerHTML += `<div><img src="${getImagePath(results[i].poster_path)}" width=25><span> &nbsp;${textToHtml(results[i].title)}</span></div>`;
-    movie_cache[results[i].id] = {poster_path: results[i].poster_path, title:results[i].title};
+  searchResults.style.display = "block";
+  searchPages.style.display = "flex";
+
+  const pages = ["", "", ""];
+  for (let j = 0; j < pages.length; j++) {
+    for (let i = 0; i < 3 && i < results.length; i++){
+      const result = results[i+j*3];
+      pages[j] += `<div><img src="${getImagePath(result.poster_path)}" width=25><span> &nbsp;${textToHtml(result.title)}</span></div>`;
+      movie_cache[result.id] = {poster_path: result.poster_path, title:result.title};
+    }
   }
-  const list_items = searchResults.children;
+  search_cache[curr_query] = {html: pages, results};
   
-  for (let i = 0; i < list_items.length; i++)
-    list_items[i].onclick = await getCast(results[i].id);
-  
-  search_cache[query] = {html: searchResults.innerHTML, results};
+  showCurrSearchPage();
+
 }
 
 
 searchButton.addEventListener('click',searchMovies)
 searchbar.addEventListener('keypress',e => {if(e.key==="Enter") searchMovies()})
+for (let i = 2; i < 5; i++) {
+  const pageButton = searchPages.children[i];
+  pageButton.onclick = () => {
+    searchPages.children[curr_page+2].className = '';
+    curr_page = i-2;
+    searchPages.children[i].className = 'curr';
+    showCurrSearchPage()
+  };
+}
