@@ -7,8 +7,10 @@ const search_cache = {};
 const profile_cache = {};
 const curr_movies = [];
 let curr_cast = new Set();
+const MAX_PAGE_AMOUNT = 4;
 const movie_cache = {};
 let curr_page = 0;
+let curr_page_amount = MAX_PAGE_AMOUNT;
 let curr_query = '';
 
 const textToHtml = str => Array.from(str).map(c => c==="&"?"&amp":(c==="<"?"&lt;":(c===">"?"&gt;":c))).join("");
@@ -40,6 +42,7 @@ function addRemoveButtonsEvent(){
 function fillInTableData(){
   searchResults.innerHTML = "";
   searchPages.style.display = "none";
+  searchResults.style.display = "none";
     tableData.innerHTML = "";
     const actor_occur_map = Object.create(null);
 
@@ -112,7 +115,7 @@ function attachListenersToSearchResults(){
 }
 
 function showCurrSearchPage(){
-  searchResults.innerHTML = search_cache[curr_query].html[curr_page];
+  searchResults.innerHTML = search_cache[curr_query].html[curr_page+1];
 
   attachListenersToSearchResults();
 }
@@ -133,15 +136,31 @@ async function searchMovies(){
   const results = (await response.json()).results.map(e => {
     return {id: e.id, poster_path: e.poster_path, title: e.title}
   });
-  
   searchResults.style.display = "block";
-  searchPages.style.display = "flex";
+  if(results.length === 0){
+    searchResults.innerHTML = "-";
+    searchPages.style.display = "none";
+    return;
+  }
+  
+  curr_page_amount = Math.min(MAX_PAGE_AMOUNT, Math.ceil(results.length/3))
+  searchPages.innerHTML = '';
+  if(curr_page_amount > 1) {
+    searchPages.innerHTML += '<a></a>';
+    for (let i = 1; i <= curr_page_amount; i++)
+      searchPages.innerHTML += `<a ${i==1?"class=curr":""} onclick=pageEventListeners[${i-1}]()>${i}</a>`;
+    
+    searchPages.innerHTML += '<a></a>';
+  }
 
-  const pages = ["", "", ""];
-  for (let j = 0; j < pages.length; j++) {
-    for (let i = 0; i < 3 && i < results.length; i++){
+  const pages = Array(1 + curr_page_amount).fill("", 1);
+  pages[0] = searchPages.innerHTML;
+  const overflow = curr_page_amount*3 - results.length + 1;
+  console.log('overf:',overflow)
+  for (let j = 0; j < curr_page_amount; j++) {
+    for (let i = 0; i < (j==curr_page_amount-1? overflow : 3) && i < results.length; i++){
       const result = results[i+j*3];
-      pages[j] += `<div><img src="${getImagePath(result.poster_path)}" width=25><span> &nbsp;${textToHtml(result.title)}</span></div>`;
+      pages[j+1] += `<div><img src="${getImagePath(result.poster_path)}" width=25><span> &nbsp;${textToHtml(result.title)}</span></div>`;
       movie_cache[result.id] = {poster_path: result.poster_path, title:result.title};
     }
   }
@@ -154,12 +173,12 @@ async function searchMovies(){
 
 searchButton.addEventListener('click',searchMovies)
 searchbar.addEventListener('keypress',e => {if(e.key==="Enter") searchMovies()})
-for (let i = 2; i < 5; i++) {
-  const pageButton = searchPages.children[i];
-  pageButton.onclick = () => {
-    searchPages.children[curr_page+2].className = '';
-    curr_page = i-2;
-    searchPages.children[i].className = 'curr';
+const pageEventListeners = [];
+for (let i = 0; i < MAX_PAGE_AMOUNT; i++) {
+  pageEventListeners.push(() => {
+    searchPages.children[curr_page+1].className = '';
+    curr_page = i;
+    searchPages.children[i+1].className = 'curr';
     showCurrSearchPage()
-  };
+  });
 }
