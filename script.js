@@ -5,6 +5,7 @@ headers: {accept: 'application/json', Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ
 
 const search_cache = {};
 const profile_cache = {};
+const page_cache = [];
 const curr_movies = [];
 let curr_cast = new Set();
 const MAX_PAGE_AMOUNT = 4;
@@ -43,33 +44,33 @@ function fillInTableData(){
   searchResults.innerHTML = "";
   searchPages.style.display = "none";
   searchResults.style.display = "none";
-    tableData.innerHTML = "";
-    const actor_occur_map = Object.create(null);
-
-    for (const actor of curr_cast){
-      let str = `<td><img src="${getImagePath(profile_cache[actor])}" width=25><span> &nbsp;${textToHtml(actor)}</span></td>`;
-      let count = 0;
-      for (const movie of curr_movies) {
-        const character_name = movie_cache[movie].cast_dict[actor];
-        count += Boolean(character_name);
-        str += `<td><span> &nbsp;${textToHtml(character_name ?? "-")}</span></td>`;
-      }
-
-      if(Boolean(actor_occur_map[count]))
-        actor_occur_map[count].push(str);
-      else
-        actor_occur_map[count] = [str];
-        
-    }
-
-    const counts = Object.keys(actor_occur_map);
-    
-    for (let i = counts.length - 1; i >= 0; i--) {
-      const start_tr = (counts[i] === 1) ? "<tr class=cool>" : "<tr>";
+  tableData.innerHTML = "";
+  const actor_occur_map = Object.create(null);
   
-      for (const str of actor_occur_map[counts[i]])
-        tableData.innerHTML += start_tr + str + "</tr>";
+  for (const actor of curr_cast){
+    let str = `<td><img src="${getImagePath(profile_cache[actor])}" width=25><span> &nbsp;${textToHtml(actor)}</span></td>`;
+    let count = 0;
+    for (const movie of curr_movies) {
+      const character_name = movie_cache[movie].cast_dict[actor];
+      count += Boolean(character_name);
+      str += `<td><span> &nbsp;${textToHtml(character_name ?? "-")}</span></td>`;
     }
+    
+    if(Boolean(actor_occur_map[count]))
+      actor_occur_map[count].push(str);
+    else
+      actor_occur_map[count] = [str];
+    
+  }
+  
+  const counts = Object.keys(actor_occur_map);
+  
+  for (let i = counts.length - 1; i >= 0; i--) {
+    const start_tr = (counts[i] === 1) ? "<tr class=cool>" : "<tr>";
+    
+    for (const str of actor_occur_map[counts[i]])
+      tableData.innerHTML += start_tr + str + "</tr>";
+  }
 }
 
 function getCast(movie_id){
@@ -102,20 +103,21 @@ function getCast(movie_id){
 };
 
 function getImagePath(path){
-    if(path === null) path = "./person.webp";
-    else path = "https://image.tmdb.org/t/p/w92"+path;
-    return path;
+  if(path === null) path = "./person.webp";
+  else path = "https://image.tmdb.org/t/p/w92"+path;
+  return path;
 }
 
 function attachListenersToSearchResults(){
   const list_items = document.querySelectorAll("#searchResults div");
-
+  
   for (let i = 0; i < list_items.length; i++)
     list_items[i].onclick = getCast(search_cache[curr_query].results[i + curr_page*3].id);
 }
 
 function showCurrSearchPage(){
-  searchResults.innerHTML = search_cache[curr_query].html[curr_page+1];
+  searchResults.style.display = "block";
+  searchResults.innerHTML = search_cache[curr_query].html[curr_page];
 
   attachListenersToSearchResults();
 }
@@ -146,21 +148,17 @@ async function searchMovies(){
   curr_page_amount = Math.min(MAX_PAGE_AMOUNT, Math.ceil(results.length/3))
   searchPages.innerHTML = '';
   if(curr_page_amount > 1) {
-    searchPages.innerHTML += '<a></a>';
-    for (let i = 1; i <= curr_page_amount; i++)
-      searchPages.innerHTML += `<a ${i==1?"class=curr":""} onclick=pageEventListeners[${i-1}]()>${i}</a>`;
-    
-    searchPages.innerHTML += '<a></a>';
+    searchPages.innerHTML = page_cache[curr_page_amount-1];
   }
 
-  const pages = Array(1 + curr_page_amount).fill("", 1);
-  pages[0] = searchPages.innerHTML;
-  const overflow = curr_page_amount*3 - results.length + 1;
-  console.log('overf:',overflow)
+  const pages = Array(curr_page_amount).fill("");
+  
+  const overflow = Math.max(0, curr_page_amount*3 - results.length + 1) || 3;
+  
   for (let j = 0; j < curr_page_amount; j++) {
     for (let i = 0; i < (j==curr_page_amount-1? overflow : 3) && i < results.length; i++){
       const result = results[i+j*3];
-      pages[j+1] += `<div><img src="${getImagePath(result.poster_path)}" width=25><span> &nbsp;${textToHtml(result.title)}</span></div>`;
+      pages[j] += `<div><img src="${getImagePath(result.poster_path)}" width=25><span> &nbsp;${textToHtml(result.title)}</span></div>`;
       movie_cache[result.id] = {poster_path: result.poster_path, title:result.title};
     }
   }
@@ -179,6 +177,12 @@ for (let i = 0; i < MAX_PAGE_AMOUNT; i++) {
     searchPages.children[curr_page+1].className = '';
     curr_page = i;
     searchPages.children[i+1].className = 'curr';
-    showCurrSearchPage()
+    showCurrSearchPage();
   });
+  let pages_html = '<a></a>';
+  for (let j = 1; j <= i + 1; j++)
+    pages_html += `<a ${j==1?"class=curr":""} onclick=pageEventListeners[${j-1}]()>${j}</a>`;
+  
+  pages_html += '<a></a>';
+  page_cache.push(pages_html);
 }
