@@ -14,7 +14,7 @@ let curr_page = 0;
 let curr_page_amount = MAX_PAGE_AMOUNT;
 let curr_query = '';
 
-const textToHtml = str => Array.from(str).map(c => c==="&"?"&amp":(c==="<"?"&lt;":(c===">"?"&gt;":c))).join("");
+const textToHtml = str => Array.from(str).map(c => c==="&"?"&amp;":(c==="<"?"&lt;":(c===">"?"&gt;":c))).join("");
 
 function addRemoveButtonsEvent(){
   const remove_buttons = document.getElementsByClassName('remove');
@@ -25,8 +25,10 @@ function addRemoveButtonsEvent(){
       const tr_to_remove = [];
       Array.from(document.getElementsByTagName('tr')).forEach(e => {
         const actor_name = e.firstChild.innerText.trim();
-        if(actor_name !== 'Actor' && curr_movies.reduce((pre, cur) => movie_cache[cur].cast_dict[actor_name] ? pre+1 : pre, 0) == 0)
+        if(actor_name !== 'Actor' && curr_movies.reduce((pre, cur) => movie_cache[cur].cast_dict[actor_name] ? pre+1 : pre, 0) == 0){
           tr_to_remove.push(e);
+          curr_cast.delete(actor_name);
+        }
         e.removeChild(e.children[i+1]);
       });
       tr_to_remove.forEach(e => tableData.removeChild(e));
