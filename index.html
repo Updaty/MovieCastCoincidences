@@ -20,8 +20,17 @@
             <text x="60" y="27" fill="#18233c" font-family="Arial, sans-serif" font-size="17" font-weight="700">Movie Cast</text>
             <text x="61" y="43" fill="#68738a" font-family="Arial, sans-serif" font-size="10" font-weight="700" letter-spacing="1.45">COINCIDENCES</text>
         </svg>
-        <input id=searchbar type=search placeholder="Search"><button id=searchButton>Search</button>
+        
+        <input id=searchbar type=search placeholder="Search">
+        <select id=searchtype>
+            <option value=multi selected>All</option>
+            <option value=movie>Only movies</option>
+            <option value=tv>Only TV shows</option>
+        </select>
+        <button id=searchButton>Search</button>
+
         <ul id=searchResults style="display: none;"></ul>
+        
         <div id=searchPages style="display: none;"><a></a><a class=curr>1</a> <a>2</a> <a>3</a><a>4</a><a></a></div>
     </div>
     <br><br>

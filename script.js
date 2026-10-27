@@ -3,7 +3,7 @@ method: 'GET',
 headers: {accept: 'application/json', Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5YTUwMjVlODBlZTA3MjcyNjk1YTdiODNmNjIzZjM3OCIsIm5iZiI6MTc5MTA0OTgwNy44MzYsInN1YiI6IjZhYzE0MDRmZWQ2Y2Q5MmFhMGQ2MjMzMSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.61wEvclL85UE7Aafk6NmTnLo7xRxvZP8y8VsLLq2xYU'}
 };
 
-const search_cache = {};
+const search_cache = {multi:{}, movie:{}, tv:{}};
 const profile_cache = {};
 const page_cache = [];
 const curr_movies = [];
@@ -13,6 +13,7 @@ const movie_cache = {};
 let curr_page = 0;
 let curr_page_amount = MAX_PAGE_AMOUNT;
 let curr_query = '';
+let curr_type = 'multi';
 
 const textToHtml = str => Array.from(str).map(c => c==="&"?"&amp;":(c==="<"?"&lt;":(c===">"?"&gt;":c))).join("");
 
@@ -75,13 +76,13 @@ function fillInTableData(){
   }
 }
 
-function getCast(movie_id){
+function getCast(media_type, movie_id){
   return async() => {
     let cast;
-    if(movie_cache[movie_id].cast){
-      cast = movie_cache[movie_id].cast;
+    if(movie_cache[media_type + movie_id].cast){
+      cast = movie_cache[media_type + movie_id].cast;
     }else{
-      const response = await fetch(`https://api.themoviedb.org/3/movie/${movie_id}/credits?language=en-US`, options)
+      const response = await fetch(`https://api.themoviedb.org/3/${media_type}/${movie_id}/credits?language=en-US`, options)
       const data = await response.json();
       cast = data.cast.map(e => {
         return {character: e.character, profile_path: e.profile_path, name: e.name}
@@ -89,12 +90,12 @@ function getCast(movie_id){
     }
     
     tableMain.style.display = "block";
-    if(!curr_movies.includes(movie_id)){
-      tableHead.firstChild.innerHTML += `<th><img src="${getImagePath(movie_cache[movie_id].poster_path)}" width=25> &nbsp;In <q>${movie_cache[movie_id].title}</q><button class=remove>-</button</th>`
-      curr_movies.push(movie_id);
-      movie_cache[movie_id].cast = cast;
-      movie_cache[movie_id].cast_dict = {};
-      const new_cast = new Set(cast.map(e => {movie_cache[movie_id].cast_dict[e.name] = e.character;profile_cache[e.name] = e.profile_path;return e.name}));
+    if(!curr_movies.includes(media_type + movie_id)){
+      tableHead.firstChild.innerHTML += `<th><img src="${getImagePath(movie_cache[media_type + movie_id].poster_path)}" width=25> &nbsp;In <q>${movie_cache[media_type + movie_id].title}</q><button class=remove>-</button</th>`
+      curr_movies.push(media_type + movie_id);
+      movie_cache[media_type + movie_id].cast = cast;
+      movie_cache[media_type + movie_id].cast_dict = {};
+      const new_cast = new Set(cast.map(e => {movie_cache[media_type + movie_id].cast_dict[e.name] = e.character; profile_cache[e.name] = e.profile_path; return e.name}));
       curr_cast = curr_cast.size===0?new_cast:curr_cast.union(new_cast);
     }
     
@@ -110,16 +111,17 @@ function getImagePath(path){
   return path;
 }
 
+
 function attachListenersToSearchResults(){
   const list_items = document.querySelectorAll("#searchResults div");
   
   for (let i = 0; i < list_items.length; i++)
-    list_items[i].onclick = getCast(search_cache[curr_query].results[i + curr_page*3].id);
+    list_items[i].onclick = getCast(search_cache[curr_type][curr_query].results[i + curr_page*3].type, search_cache[curr_type][curr_query].results[i + curr_page*3].id);
 }
 
 function showCurrSearchPage(){
   searchResults.style.display = "block";
-  searchResults.innerHTML = search_cache[curr_query].html[curr_page];
+  searchResults.innerHTML = search_cache[curr_type][curr_query].html[curr_page];
 
   attachListenersToSearchResults();
 }
@@ -127,18 +129,19 @@ function showCurrSearchPage(){
 async function searchMovies(){
   if(!(searchbar.value)) return;
   curr_query = searchbar.value;
+  curr_type = searchtype.value;
   curr_page = 0;
   searchPages.style.display = "flex";
-  if(search_cache[curr_query]){
+  if(search_cache[curr_type][curr_query]){
     showCurrSearchPage();
 
     attachListenersToSearchResults();
     return;
   }
   searchResults.innerHTML = "";
-  const response = await fetch(`https://api.themoviedb.org/3/search/movie?query=${curr_query}`, options);
-  const results = (await response.json()).results.map(e => {
-    return {id: e.id, poster_path: e.poster_path, title: e.title}
+  const response = await fetch(`https://api.themoviedb.org/3/search/${curr_type}?query=${curr_query}`, options);
+  const results = (await response.json()).results.filter(e=>e.media_type !== "person").map(e => {
+    return {id: e.id, poster_path: e.poster_path, title: (e.title ?? e.name), type: e.media_type}
   });
   searchResults.style.display = "block";
   if(results.length === 0){
@@ -158,13 +161,13 @@ async function searchMovies(){
   const overflow = Math.max(0, curr_page_amount*3 - results.length + 1) || 3;
   
   for (let j = 0; j < curr_page_amount; j++) {
-    for (let i = 0; i < (j==curr_page_amount-1? overflow : 3) && i < results.length; i++){
+    for (let i = 0; i < (j === curr_page_amount-1 ? overflow : 3) && i < results.length; i++){
       const result = results[i+j*3];
       pages[j] += `<div><img src="${getImagePath(result.poster_path)}" width=25><span> &nbsp;${textToHtml(result.title)}</span></div>`;
-      movie_cache[result.id] = {poster_path: result.poster_path, title:result.title};
+      movie_cache[result.type+result.id] = {poster_path: result.poster_path, title:result.title};
     }
   }
-  search_cache[curr_query] = {html: pages, results};
+  search_cache[curr_type][curr_query] = {html: pages, results};
   
   showCurrSearchPage();
 
