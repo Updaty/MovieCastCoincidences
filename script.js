@@ -17,6 +17,12 @@ let curr_type = 'multi';
 
 const textToHtml = str => Array.from(str).map(c => c==="&"?"&amp;":(c==="<"?"&lt;":(c===">"?"&gt;":c))).join("");
 
+function closeSearchZone(){
+  searchResults.innerHTML = "";
+  searchPages.style.display = "none";
+  searchResults.style.display = "none";
+}
+
 function addRemoveButtonsEvent(){
   const remove_buttons = document.getElementsByClassName('remove');
 
@@ -44,9 +50,6 @@ function addRemoveButtonsEvent(){
 }
 
 function fillInTableData(){
-  searchResults.innerHTML = "";
-  searchPages.style.display = "none";
-  searchResults.style.display = "none";
   tableData.innerHTML = "";
   const actor_occur_map = Object.create(null);
   
@@ -85,7 +88,7 @@ function getCast(media_type, movie_id){
       const response = await fetch(`https://api.themoviedb.org/3/${media_type}/${movie_id}/credits?language=en-US`, options)
       const data = await response.json();
       cast = data.cast.map(e => {
-        return {character: e.character, profile_path: e.profile_path, name: e.name}
+        return {character: e.character, profile_path: e.profile_path ?? "no-person", name: e.name}
       });
     }
     
@@ -98,7 +101,8 @@ function getCast(media_type, movie_id){
       const new_cast = new Set(cast.map(e => {movie_cache[media_type + movie_id].cast_dict[e.name] = e.character; profile_cache[e.name] = e.profile_path; return e.name}));
       curr_cast = curr_cast.size===0?new_cast:curr_cast.union(new_cast);
     }
-    
+    closeSearchZone();
+
     fillInTableData();
     
     addRemoveButtonsEvent();
@@ -106,7 +110,8 @@ function getCast(media_type, movie_id){
 };
 
 function getImagePath(path){
-  if(path === null) path = "./person.webp";
+  if(path === "no-person") path = "./person.webp";
+  else if(path === "no-media") path = "./media_placeholder.webp";
   else path = "https://image.tmdb.org/t/p/w92"+path;
   return path;
 }
@@ -134,14 +139,18 @@ async function searchMovies(){
   searchPages.style.display = "flex";
   if(search_cache[curr_type][curr_query]){
     showCurrSearchPage();
-
     attachListenersToSearchResults();
+
+    searchPages.innerHTML = '';
+    if(curr_page_amount > 1) {
+      searchPages.innerHTML = page_cache[curr_page_amount-1];
+    }
     return;
   }
   searchResults.innerHTML = "";
   const response = await fetch(`https://api.themoviedb.org/3/search/${curr_type}?query=${curr_query}`, options);
   const results = (await response.json()).results.filter(e=>e.media_type !== "person").map(e => {
-    return {id: e.id, poster_path: e.poster_path, title: (e.title ?? e.name), type: e.media_type}
+    return {id: e.id, poster_path: e.poster_path ?? "no-media", title: (e.title ?? e.name), type: e.media_type}
   });
   searchResults.style.display = "block";
   if(results.length === 0){
@@ -158,7 +167,7 @@ async function searchMovies(){
 
   const pages = Array(curr_page_amount).fill("");
   
-  const overflow = Math.max(0, curr_page_amount*3 - results.length + 1) || 3;
+  const overflow = results.length >= curr_page_amount * 3 ? 3 : results.length%3;
   
   for (let j = 0; j < curr_page_amount; j++) {
     for (let i = 0; i < (j === curr_page_amount-1 ? overflow : 3) && i < results.length; i++){
@@ -175,6 +184,10 @@ async function searchMovies(){
 
 
 searchButton.addEventListener('click',searchMovies)
+document.body.addEventListener('click',({ target }) => {
+  const supposedZone = target.closest('#searchZone');
+  if(supposedZone) closeSearchZone();
+})
 searchbar.addEventListener('keypress',e => {if(e.key==="Enter") searchMovies()})
 const pageEventListeners = [];
 for (let i = 0; i < MAX_PAGE_AMOUNT; i++) {
