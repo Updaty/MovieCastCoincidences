@@ -1,98 +1,117 @@
-#searchZone {
-    position: absolute;
-    top: 0;
-    z-index: 2;
-    background-color: rgba(250,250,250,0.95);
+@media (prefers-color-scheme: dark) { 
+  html{
+    color-scheme: dark;
+  }
 
-    width: max-content;
+  svg.logo text {
+    filter:invert(1) hue-rotate(180deg);
+  }
+}
+
+html {
+  color:light-dark(black,white);
+}
+
+
+img[src="./person.webp"], img[src="./media_placeholder.webp"]{
+  filter: light-dark(none, invert(1));
+}
+
+#searchZone {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  background-color: light-dark(#fafafaf2,#050505f2);
+
+  width: max-content;
 }
 #searchPages {
-    width:100%;
-    justify-content: space-evenly;
+  width:100%;
+  justify-content: space-evenly;
 }
 #searchPages a {
-    display: flex;
-    text-decoration: underline;
-    cursor:pointer;
-    &.curr{
-        color:darkblue;
-        font-weight: 900;
-    }
+  display: flex;
+  text-decoration: underline;
+  cursor:pointer;
+  &.curr{
+    color: light-dark(darkblue,lightblue);
+    font-weight: 900;
+  }
 }
 
 tr.cool{
-    font-size: small;
-    color: grey;
+  font-size: small;
+  color: grey;
 }
 button.remove{
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: solid 1px lightgrey;
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: 900;
-    padding: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: solid 1px light-dark(lightgray,darkgrey);
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 900;
+  padding: 0;
 }
 #searchResults {
-    padding-left: 0px;
+  padding-left: 0px;
 }
 
 #searchResults div {
-    width: 400px;
-    height: 43.5px;
-    display: flex;
-    align-items: center;
+  width: 400px;
+  height: 43.5px;
+  display: flex;
+  align-items: center;
 }
 #searchResults div span {
-    overflow:hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+  overflow:hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 #tableMain {
-    position: static;
+  position: static;
 }
 #tableData tr td, #tablehead tr th {
-    width: 200px;
-    height: 43.5px;
-    align-items: center;
-    justify-items: center;
+  width: 200px;
+  height: 43.5px;
+  align-items: center;
+  justify-items: center;
 }
 
 #searchResults div, #searchbar, #searchtype, #searchButton, #searchZone, td, th {
-    border: solid lightgray 1px;
-    margin: 1px;
-    border-radius: 5px;
-    padding: 3px;
-    font-size: 1rem;
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  border: solid light-dark(lightgray,darkgrey) 1px;
+  margin: 1px;
+  border-radius: 5px;
+  padding: 3px;
+  font-size: 1rem;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 #searchResults div img, #tableData tr td img, #tableHead tr th img {
-    border-radius: 5px;
+  border-radius: 5px;
 }
 
 #searchResults div.unknown_cast {
-    border-color: red;
+  border-color: red;
 }
 
 #searchResults div.unknown_cast::after {
-    content:"the cast is unknown";
-    color: red;
-    font-size: 0.3rem;
-    position:absolute;
-    top:calc(calc(var(--index) * 51.5px) + 90px);
+  content:"the cast is unknown";
+  color: red;
+  font-size: 0.3rem;
+  position:absolute;
+  top:calc(calc(var(--index) * 51.5px) + 90px);
 }
 
 #searchZone svg.logo {
-    width: 120px;
-    margin-right: 6px;
-    vertical-align: middle;
+  width: 120px;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
 @media (max-width: 480px) {
-    #searchZone svg.logo {
-        display: block;
-        margin: 0 auto 6px;
-    }
+  #searchZone svg.logo {
+    display: block;
+    margin: 0 auto 6px;
+  }
 }
 
 select,
@@ -102,18 +121,18 @@ select,
 
 select {
   flex: 1;
-  background: #eeeeee;
+  background: light-dark(#eeeeee,#111111);
   transition: 0.2s;
-  width: 118px;
+  width: 8.5rem;
 }
 
 select:hover,
 select:focus {
-  background: rgb(230, 230, 230);
+  background: light-dark(#e6e6e6,#191919);
 }
 select::picker-icon {
   margin-right:2px;
-  color:#888;
+  color:light-dark(#888,#777);
   transition: 0.2s rotate;
 }
 select:open::picker-icon {
@@ -125,10 +144,10 @@ select:open::picker-icon {
 option {
   display: flex;
   justify-content: flex-start;
-  border: 1px solid #dddddd;
+  border: 1px solid light-dark(#ddd,#222);
   font-size: 1rem;
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-  background: #f1f1f1;
+  background: light-dark(#f1f1f1,#0e0e0e);
   padding: 0 0 0 3px;
   transition: 0.2s;
 }
@@ -150,7 +169,7 @@ option:not(option:last-of-type) {
 
 option:hover,
 option:focus {
-  background: rgb(230, 230, 230);
+  background: light-dark(#e6e6e6,#191919);
 }
 option:checked {
   font-weight: bold;
