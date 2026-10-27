@@ -63,11 +63,23 @@ button.remove{
     margin: 1px;
     border-radius: 5px;
     padding: 3px;
-    font-size: 13.3px;
+    font-size: 1rem;
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 #searchResults div img, #tableData tr td img, #tableHead tr th img {
     border-radius: 5px;
+}
+
+#searchResults div.unknown_cast {
+    border-color: red;
+}
+
+#searchResults div.unknown_cast::after {
+    content:"the cast is unknown";
+    color: red;
+    font-size: 0.3rem;
+    position:absolute;
+    top:calc(calc(var(--index) * 51.5px) + 90px);
 }
 
 #searchZone svg.logo {
@@ -114,7 +126,7 @@ option {
   display: flex;
   justify-content: flex-start;
   border: 1px solid #dddddd;
-  font-size: 13.3px;
+  font-size: 1rem;
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
   background: #f1f1f1;
   padding: 0 0 0 3px;

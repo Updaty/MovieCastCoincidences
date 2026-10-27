@@ -8,7 +8,7 @@ const profile_cache = {};
 const page_cache = [];
 const curr_movies = [];
 let curr_cast = new Set();
-const MAX_PAGE_AMOUNT = 4;
+const MAX_PAGE_AMOUNT = 5;
 const movie_cache = {};
 let curr_page = 0;
 let curr_page_amount = MAX_PAGE_AMOUNT;
@@ -92,6 +92,13 @@ function getCast(media_type, movie_id){
       });
     }
     
+    if(cast.length === 0) {
+      const index = search_cache[curr_type][curr_query].results.findIndex(e=>e.id===movie_id && e.type===media_type);
+      searchResults.children[index%3].className = 'unknown_cast';
+      searchResults.children[index%3].style.cssText = `--index: ${index%3}`;
+      return;
+    }
+
     tableMain.style.display = "block";
     if(!curr_movies.includes(media_type + movie_id)){
       tableHead.firstChild.innerHTML += `<th><img src="${getImagePath(movie_cache[media_type + movie_id].poster_path)}" width=25> &nbsp;In <q>${movie_cache[media_type + movie_id].title}</q><button class=remove>-</button</th>`
@@ -120,8 +127,10 @@ function getImagePath(path){
 function attachListenersToSearchResults(){
   const list_items = document.querySelectorAll("#searchResults div");
   
-  for (let i = 0; i < list_items.length; i++)
-    list_items[i].onclick = getCast(search_cache[curr_type][curr_query].results[i + curr_page*3].type, search_cache[curr_type][curr_query].results[i + curr_page*3].id);
+  for (let i = 0; i < list_items.length; i++){
+    const {type, id} = search_cache[curr_type][curr_query].results[i + curr_page*3];
+    list_items[i].onclick = getCast(type, id);
+  }
 }
 
 function showCurrSearchPage(){
@@ -150,7 +159,7 @@ async function searchMovies(){
   searchResults.innerHTML = "";
   const response = await fetch(`https://api.themoviedb.org/3/search/${curr_type}?query=${curr_query}`, options);
   const results = (await response.json()).results.filter(e=>e.media_type !== "person").map(e => {
-    return {id: e.id, poster_path: e.poster_path ?? "no-media", title: (e.title ?? e.name), type: e.media_type}
+    return {id: e.id, poster_path: e.poster_path ?? "no-media", title: (e.title ?? e.name), type: e.media_type ?? curr_type}
   });
   searchResults.style.display = "block";
   if(results.length === 0){
@@ -186,7 +195,7 @@ async function searchMovies(){
 searchButton.addEventListener('click',searchMovies)
 document.body.addEventListener('click',({ target }) => {
   const supposedZone = target.closest('#searchZone');
-  if(supposedZone) closeSearchZone();
+  if(!supposedZone) closeSearchZone();
 })
 searchbar.addEventListener('keypress',e => {if(e.key==="Enter") searchMovies()})
 const pageEventListeners = [];
